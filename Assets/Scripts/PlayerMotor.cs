@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerMotor : MonoBehaviour {
+public class PlayerMotor : Photon.MonoBehaviour {
 
-	public float velocidad = 5f;
 	private Rigidbody2D rb2d;
 	public float SpeedMultiplier;
     public float RotationSpeed;
