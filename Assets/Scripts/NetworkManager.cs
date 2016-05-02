@@ -1,51 +1,109 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class NetworkManager : Photon.PunBehaviour {
 	
 	[SerializeField] private Transform[] spawnPoints;
     public static string guiMessage;
 
-	// Use this for initialization
-	void Start () {
+    public GameObject UICanvas;
+    string roomName = string.Empty;
+
+    RoomInfo[] avaliableRooms;
+    TypedLobby typedLobby;
+
+    public Button joinRoomButton;
+    public Text statusBar;
+
+    public AddListItem ali;
+
+    // Use this for initialization
+    void Start () {
 		spawnPoints = transform.GetComponentsInChildren<Transform>();
-		PhotonNetwork.ConnectUsingSettings("1.0a");
-	}
+        //PhotonNetwork.ConnectUsingSettings("1.0a");
+        PhotonNetwork.ConnectToRegion(CloudRegionCode.us, "1.0");
+        typedLobby = new TypedLobby("Main", LobbyType.Default);
+    }
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Joined Master");
-        PhotonNetwork.JoinRandomRoom();
+        PhotonNetwork.JoinLobby(typedLobby);
+        foreach(RoomInfo room in avaliableRooms)
+        {
+            Debug.Log(room);
+        }
     }
-
-    public override void  OnJoinedLobby(){
-		Debug.Log("Joined Lobby");
-	}
 
     public override void OnJoinedRoom()
     {
-        Debug.Log("Joined Room");
+        PhotonNetwork.Instantiate("PlayerObject", GenerateRandomSpawnPoint().position, GenerateRandomSpawnPoint().rotation, 0);
         PlayerFollow.gameStarted = true;
-        PhotonNetwork.Instantiate("PlayerObject", GenerateRandomSpawnPoint(), Quaternion.identity, 0);
         PlayerFollow.searchForPlayer = true;
+        UICanvas.SetActive(false);
     }
 	
 	void OnPhotonRandomJoinFailed()
 	{
-		Debug.Log("Join Room Failed, Creating Room");
-		PhotonNetwork.CreateRoom("TEST");
+		Debug.Log("Join Room Failed");
 	}
 	
 	void OnGUI()
 	{
-		GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
-        GUILayout.Label("Player ID: "+PhotonNetwork.player.ID.ToString());
-        GUILayout.Label("Message: " + guiMessage);
+#if UNITY_EDITOR
+        GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
+        GUILayout.Label("Player ID: "+ PhotonNetwork.player.ID.ToString());
+        GUILayout.Label("Lobby: " + PhotonNetwork.lobby);
+        GUILayout.Label("Selected Room: " + roomName);
+        GUILayout.Label("Joined Room: " + PhotonNetwork.room);
+        GUILayout.Label("Rooms: " + avaliableRooms.Length);
+        GUILayout.Label("Ping: " + PhotonNetwork.GetPing());
+#endif
+    }
+
+    void LateUpdate()
+    {
+        avaliableRooms = PhotonNetwork.GetRoomList();
+        CreateRoomList();
+
+        statusBar.text = PhotonNetwork.connectionStateDetailed.ToString();
+
+        joinRoomButton.interactable = (roomName != "");
     }
 	
-	public Vector3 GenerateRandomSpawnPoint()
+	public Transform GenerateRandomSpawnPoint()
 	{
-		Vector3 spawnPoint;
-		spawnPoint = spawnPoints[PhotonNetwork.player.ID].transform.position;
+		Transform spawnPoint;
+		spawnPoint = spawnPoints[PhotonNetwork.player.ID].transform;
 		return spawnPoint; 
 	}
+
+    public void CreateNetworkRoom()
+    {
+        //Manage Room Options
+        RoomOptions roomOpts = new RoomOptions();
+        roomOpts.maxPlayers = 10;
+        //Create the room
+        roomName = "TEST" + Random.Range(1,1000);
+        PhotonNetwork.CreateRoom(roomName, roomOpts, typedLobby);
+    }
+
+    public void SelectRoom(string selectedRoomName)
+    {
+        roomName = selectedRoomName;
+    }
+
+    public void JoinSelectedRoom()
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+    public void CreateRoomList()
+    {
+        avaliableRooms = PhotonNetwork.GetRoomList();
+        foreach (RoomInfo roomInfo in avaliableRooms)
+        {
+            ali.InstantiateListItem(roomInfo.name);
+        }
+    }
 }

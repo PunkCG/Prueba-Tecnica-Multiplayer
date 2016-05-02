@@ -8,19 +8,23 @@ public class NetworkPlayer : Photon.MonoBehaviour {
     Vector2 realPosition;
     Quaternion realRotation;
 
+    private ParticleSystem MyPS;
+    public bool NetworkShooting;
+
     // Use this for initialization
     void Start ()
     {
         IsNetworkPlayer = !photonView.isMine;
+        MyPS = transform.Find("CannonPoint").GetComponent<ParticleSystem>();
 
         if (!IsNetworkPlayer)
         {
             GetComponent<PlayerMotor>().enabled = true;
-            GetComponentInChildren<PlayerShoot>().enabled = true;
         }
         else
         {
             gameObject.tag = "NetworkPlayer";
+            gameObject.layer = 9;
             GetComponentInChildren<SpriteRenderer>().color = Color.red;
         }
     }
@@ -36,16 +40,27 @@ public class NetworkPlayer : Photon.MonoBehaviour {
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        Debug.Log("Is Serializing");
         if (stream.isWriting)
         {
             stream.SendNext((Vector2)transform.position);
             stream.SendNext(transform.rotation);
+            if (MyPS != null)
+            {
+                stream.SendNext(MyPS.isPlaying);
+            }
         }
         else
         {
             realPosition = (Vector2)stream.ReceiveNext();
             realRotation = (Quaternion)stream.ReceiveNext();
+            try
+            {
+                NetworkShooting = (bool)stream.ReceiveNext();
+            }
+            catch (UnityException e)
+            {
+                Debug.Log(e);
+            }
         }
     }
 }

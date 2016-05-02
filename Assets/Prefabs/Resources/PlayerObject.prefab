@@ -31,7 +31,8 @@ GameObject:
   - 114: {fileID: 11433832}
   - 114: {fileID: 11485584}
   - 114: {fileID: 11402992}
-  m_Layer: 0
+  - 114: {fileID: 11434792}
+  m_Layer: 8
   m_Name: PlayerObject
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -48,7 +49,6 @@ GameObject:
   - 4: {fileID: 477576}
   - 198: {fileID: 19832734}
   - 199: {fileID: 19964776}
-  - 114: {fileID: 11419630}
   m_Layer: 0
   m_Name: CannonPoint
   m_TagString: Untagged
@@ -160,19 +160,6 @@ MonoBehaviour:
   viewIdField: 0
   instantiationId: -1
   isRuntimeInstantiated: 0
---- !u!114 &11419630
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 190466}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29e345f1d3cbbf442afb7907e8be914c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isShooting: 0
-  canShoot: 1
 --- !u!114 &11433832
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -188,6 +175,20 @@ MonoBehaviour:
   RotationSpeed: 30
   DeadZone: 0.25
   isMoving: 0
+--- !u!114 &11434792
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 134530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29e345f1d3cbbf442afb7907e8be914c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isShooting: 0
+  ID: 0
+  ps: {fileID: 19832734}
 --- !u!114 &11485584
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -200,6 +201,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsNetworkPlayer: 0
+  NetworkShooting: 0
 --- !u!198 &19832734
 ParticleSystem:
   m_ObjectHideFlags: 1
@@ -1601,7 +1603,7 @@ ParticleSystem:
         m_RotationOrder: 4
       minMaxState: 0
     m_Bounce:
-      scalar: 1
+      scalar: 0
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1674,9 +1676,9 @@ ParticleSystem:
     radiusScale: 1
     collidesWith:
       serializedVersion: 2
-      m_Bits: 4294967295
+      m_Bits: 4294967039
     maxCollisionShapes: 256
-    quality: 0
+    quality: 1
     voxelSize: 0.5
     collisionMessages: 1
     collidesWithDynamic: 1
