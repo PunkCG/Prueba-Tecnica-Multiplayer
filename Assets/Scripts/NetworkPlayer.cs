@@ -71,6 +71,6 @@ public class NetworkPlayer : Photon.MonoBehaviour {
     public void OnColiisionEnter2D(Collision2D col)
     {
         Debug.Log("Coll");
-        rb2d.AddForceAtPosition(Vector2.one * 10, col.transform.position - transform.position);
+        rb2d.AddForceAtPosition(Vector2.one * 100, col.transform.position - transform.position);
     }
 }
