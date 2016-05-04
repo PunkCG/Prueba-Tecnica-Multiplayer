@@ -1,40 +1,68 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerShoot : MonoBehaviour 
+public class PlayerShoot : Photon.MonoBehaviour 
 {
 	[SerializeField] private bool isShooting;
-	[SerializeField] private bool canShoot = true;
-	private ParticleSystem ps;
+    private bool flagDisparo = true;
+    [SerializeField] private int ID;
+    public ParticleSystem ps;
+    public Transform bulletInstPoint;
+
+    NetworkPlayer np;
+
 	// Use this for initialization
 	void Start () 
 	{
-		ps = GetComponent<ParticleSystem>();
+        np = GetComponent<NetworkPlayer>();
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-		isShooting = Input.GetAxis("Fire1") > 0 || Input.GetAxis("Fire2") > 0 || Input.GetAxis("Fire3") > 0;
-		if(isShooting && canShoot)
+        if (np.IsNetworkPlayer)
+        {
+            isShooting = np.NetworkShooting;
+        }
+        else
+        {
+            isShooting = Input.GetButton("Fire1") || Input.GetButton("Fire2") || Input.GetButton("Fire3");
+        }
+
+		if(isShooting && !np.IsNetworkPlayer)
 		{
-			StartShoot();
+            if (flagDisparo)
+            {
+                PhotonNetwork.Instantiate("Bullet", bulletInstPoint.position, bulletInstPoint.rotation, 0);
+                //ps.Play();
+                Debug.Log("Disparo local");
+                flagDisparo = false;
+            }
 		}
-		else if (!isShooting && !canShoot)
+        else if(np.IsNetworkPlayer)
+        {            
+            if (np.NetworkShooting)
+            {
+                if (flagDisparo)
+                {
+                    PhotonNetwork.Instantiate("Bullet", bulletInstPoint.position, bulletInstPoint.rotation, 0);
+                    //ps.Play();
+                    Debug.Log("Disparo remoto");
+                    flagDisparo = false;
+                }
+            }
+            else if(!flagDisparo)
+            {
+                Debug.Log("No dispara remoto");
+                //ps.Stop();
+                flagDisparo = true;
+            }
+        }
+		else if (!isShooting && !flagDisparo)
 		{
-			StopShoot();
+            Debug.Log("No dispara local");
+            //ps.Stop();
+            flagDisparo = true;
 		}
-	}
-	
-	void StartShoot()
-	{
-		ps.Play();
-		canShoot = false;
-	}
-		
-	void StopShoot()
-	{
-		ps.Stop();
-		canShoot = true;
 	}
 }
