@@ -7,6 +7,7 @@ public class PlayerShoot : Photon.MonoBehaviour
     private bool flagDisparo = true;
     [SerializeField] private int ID;
     public ParticleSystem ps;
+    public Transform bulletInstPoint;
 
     NetworkPlayer np;
 
@@ -32,7 +33,8 @@ public class PlayerShoot : Photon.MonoBehaviour
 		{
             if (flagDisparo)
             {
-                ps.Play();
+                PhotonNetwork.Instantiate("Bullet", bulletInstPoint.position, bulletInstPoint.rotation, 0);
+                //ps.Play();
                 Debug.Log("Disparo local");
                 flagDisparo = false;
             }
@@ -43,7 +45,8 @@ public class PlayerShoot : Photon.MonoBehaviour
             {
                 if (flagDisparo)
                 {
-                    ps.Play();
+                    PhotonNetwork.Instantiate("Bullet", bulletInstPoint.position, bulletInstPoint.rotation, 0);
+                    //ps.Play();
                     Debug.Log("Disparo remoto");
                     flagDisparo = false;
                 }
@@ -51,14 +54,14 @@ public class PlayerShoot : Photon.MonoBehaviour
             else if(!flagDisparo)
             {
                 Debug.Log("No dispara remoto");
-                ps.Stop();
+                //ps.Stop();
                 flagDisparo = true;
             }
         }
 		else if (!isShooting && !flagDisparo)
 		{
             Debug.Log("No dispara local");
-            ps.Stop();
+            //ps.Stop();
             flagDisparo = true;
 		}
 	}

@@ -11,11 +11,15 @@ public class NetworkPlayer : Photon.MonoBehaviour {
     private ParticleSystem MyPS;
     public bool NetworkShooting;
 
+    Rigidbody2D rb2d;
+
     // Use this for initialization
     void Start ()
     {
         IsNetworkPlayer = !photonView.isMine;
         MyPS = transform.Find("CannonPoint").GetComponent<ParticleSystem>();
+
+        rb2d = GetComponent<Rigidbody2D>();
 
         if (!IsNetworkPlayer)
         {
@@ -62,5 +66,11 @@ public class NetworkPlayer : Photon.MonoBehaviour {
                 Debug.Log(e);
             }
         }
+    }
+
+    public void OnColiisionEnter2D(Collision2D col)
+    {
+        Debug.Log("Coll");
+        rb2d.AddForceAtPosition(Vector2.one * 10, col.transform.position - transform.position);
     }
 }
