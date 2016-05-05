@@ -1,52 +1,57 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Balas : Photon.MonoBehaviour {
-
-    Rigidbody2D rb2d;
+public class Balas : Photon.MonoBehaviour
+{
+    [Range(1.0f,10.0f)]
     public float velocidad;
 
-    Vector2 realPosition;
-    Quaternion realRotation;
-
-    public bool IsNetworkBullet;
+    private Vector2 realPosition;
+    public GameObject prefabExplosion;
 
     // Use this for initialization
-    void Start () {
-        IsNetworkBullet = !photonView.isMine;
-        rb2d = GetComponent<Rigidbody2D>();
-	}
-
-    void Update()
+    void Start ()
     {
-        if (IsNetworkBullet)
+        if (!photonView.isMine)
         {
-            transform.position = Vector2.Lerp(transform.position, realPosition, 0.1f);
-            transform.eulerAngles = new Vector3(0, 0, Mathf.LerpAngle(transform.rotation.eulerAngles.z, realRotation.eulerAngles.z, 0.1f));
+            tag = "NetworkBullet";
+            GetComponent<Collider2D>().enabled = false;
         }
-    }
+	}
 
     void FixedUpdate()
     {
-        transform.Translate(Vector3.up*(velocidad/5));
+        transform.Translate(Vector3.up * (velocidad / 25));
     }
 
-    void OnCollisionEnter2D(Collision2D col)
+    void OnTriggerEnter2D(Collider2D col)
     {
-        PhotonNetwork.Destroy(gameObject);
-    }
-
-    void OnPhotonSerializedView(PhotonStream stream)
-    {
-        if (stream.isWriting)
+        if (tag == "PlayerBullet" && col.tag == "Player")
         {
-            stream.SendNext((Vector2)transform.position);
-            stream.SendNext(transform.rotation);
+            //Las balas chocan contra el mismo jugador que las disparó
         }
         else
         {
-            realPosition = (Vector2)stream.ReceiveNext();
-            realRotation = (Quaternion)stream.ReceiveNext();
+            if (col.gameObject.GetPhotonView())
+            {
+                col.gameObject.GetPhotonView().RPC("TakeDamage", PhotonTargets.All, photonView.ownerId);
+            }
+            Destruir(col.gameObject);
         }
+    }
+    
+    public void Destruir(GameObject goCol)
+    {
+        if (photonView.isMine && goCol.name != gameObject.name)
+        {
+            PhotonNetwork.Destroy(gameObject);
+            PhotonNetwork.Instantiate("Explosion", transform.position, transform.rotation,0);
+        }
+    }
+
+    [PunRPC]
+    public void CallbackMatar()
+    {
+        
     }
 }
