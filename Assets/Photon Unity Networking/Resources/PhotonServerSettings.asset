@@ -30,4 +30,9 @@ MonoBehaviour:
   - PunPickupSimple
   - PunRespawn
   - RequestForPickupTimes
+  - TakeDamage
+  - Destruir
+  - shootBullet
+  - JugadorCrece
+  - CallbackMatar
   DisableAutoOpenWizard: 1

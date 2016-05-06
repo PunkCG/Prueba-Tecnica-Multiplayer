@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class NetworkManager : Photon.PunBehaviour {
@@ -7,22 +8,35 @@ public class NetworkManager : Photon.PunBehaviour {
 	[SerializeField] private Transform[] spawnPoints;
     public static string guiMessage;
 
-    public GameObject UICanvas;
+    GameObject UICanvasMenu;
+    GameObject UICanvasPerder;
+    PlayerFollow pf;
     string roomName = string.Empty;
 
     RoomInfo[] avaliableRooms;
     TypedLobby typedLobby;
 
-    public Button joinRoomButton;
+    public Button unirseSalaBtn;
+    public Button crearSalaBtn;
     public Text statusBar;
 
-    public AddListItem ali;
+    public Color[] playerColors;
+
+    AddListItem ali;
 
     // Use this for initialization
-    void Start () {
+    void Start ()
+    {
+        pf = FindObjectOfType<Camera>().GetComponent<PlayerFollow>();
+
+        UICanvasPerder = UICanvasMenu = transform.Find("Canvas").transform.Find("Panel Perder").gameObject;
+        UICanvasMenu = transform.Find("Canvas").transform.Find("Panel Menu").gameObject;
+        ali = UICanvasMenu.transform.Find("Lista de Salas").transform.Find("ElementGrid").GetComponent<AddListItem>();
 		spawnPoints = transform.GetComponentsInChildren<Transform>();
-        //PhotonNetwork.ConnectUsingSettings("1.0a");
-        PhotonNetwork.ConnectToRegion(CloudRegionCode.us, "1.0");
+        if (!PhotonNetwork.connected)
+        {
+            PhotonNetwork.ConnectUsingSettings("1.0a");
+        }
         typedLobby = new TypedLobby("Main", LobbyType.Default);
     }
 
@@ -35,12 +49,17 @@ public class NetworkManager : Photon.PunBehaviour {
         }
     }
 
+    public override void OnJoinedLobby()
+    {
+        crearSalaBtn.interactable = true;
+    }
+
     public override void OnJoinedRoom()
     {
         PhotonNetwork.Instantiate("PlayerObject", GenerateRandomSpawnPoint().position, GenerateRandomSpawnPoint().rotation, 0);
-        PlayerFollow.gameStarted = true;
-        PlayerFollow.searchForPlayer = true;
-        UICanvas.SetActive(false);
+        pf.gameStarted = true;
+        pf.searchForPlayer = true;
+        UICanvasMenu.SetActive(false);
     }
 	
 	void OnPhotonRandomJoinFailed()
@@ -68,13 +87,19 @@ public class NetworkManager : Photon.PunBehaviour {
 
         statusBar.text = PhotonNetwork.connectionStateDetailed.ToString();
 
-        joinRoomButton.interactable = (roomName != "");
+        unirseSalaBtn.interactable = (roomName != "" && !PhotonNetwork.connecting);
+        crearSalaBtn.interactable = !PhotonNetwork.connecting;
+
+        if(pf.gameFinished)
+        {
+            UICanvasPerder.SetActive(true);
+        }
     }
 	
 	public Transform GenerateRandomSpawnPoint()
 	{
 		Transform spawnPoint;
-		spawnPoint = spawnPoints[PhotonNetwork.player.ID].transform;
+		spawnPoint = spawnPoints[Random.Range(0,10)].transform;
 		return spawnPoint; 
 	}
 
@@ -105,5 +130,17 @@ public class NetworkManager : Photon.PunBehaviour {
         {
             ali.InstantiateListItem(roomInfo.name);
         }
+    }
+
+    public void SalirDeJuego()
+    {
+        Application.Quit();
+    }
+
+    public void DejarSala()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.Disconnect();
+        SceneManager.LoadScene(0);
     }
 }

@@ -7,6 +7,9 @@ TagManager:
   - SpawnPoint
   - NetworkPlayer
   - GameManager
+  - Plataforma
+  - PlayerBullet
+  - NetworkBullet
   layers:
   - Default
   - TransparentFX
@@ -18,8 +21,8 @@ TagManager:
   - 
   - Player
   - NetworkPlayer
-  - 
-  - 
+  - Plataforma
+  - Escudos
   - 
   - 
   - 

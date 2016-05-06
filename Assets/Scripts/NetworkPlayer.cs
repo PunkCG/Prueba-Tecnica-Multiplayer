@@ -1,27 +1,38 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class NetworkPlayer : Photon.MonoBehaviour {
-	
-	public bool IsNetworkPlayer;
+public class NetworkPlayer : Photon.MonoBehaviour
+{
+    public Text labelVida;
+    [SerializeField]
+    int vida = 100;
 
     Vector2 realPosition;
     Quaternion realRotation;
+    Vector3 escalaReal;
+    Color colorReal;
 
-    private ParticleSystem MyPS;
+    public GameObject prefabParticulasMuerte;
     public bool NetworkShooting;
 
-    Rigidbody2D rb2d;
+    private PlayerFollow pf;
+    NetworkManager nm;
+    private SpriteRenderer miSprite;
 
     // Use this for initialization
     void Start ()
     {
-        IsNetworkPlayer = !photonView.isMine;
-        MyPS = transform.Find("CannonPoint").GetComponent<ParticleSystem>();
+        nm = FindObjectOfType<NetworkManager>();
 
-        rb2d = GetComponent<Rigidbody2D>();
+        name = name + PhotonNetwork.player.ID.ToString();
 
-        if (!IsNetworkPlayer)
+        pf = GameObject.FindObjectOfType<Camera>().GetComponent<PlayerFollow>();
+        GetComponent<SpriteRenderer>().color = nm.playerColors[Random.Range(0, nm.playerColors.Length)];
+        miSprite = GetComponent<SpriteRenderer>();
+
+        if (photonView.isMine)
         {
             GetComponent<PlayerMotor>().enabled = true;
         }
@@ -29,16 +40,17 @@ public class NetworkPlayer : Photon.MonoBehaviour {
         {
             gameObject.tag = "NetworkPlayer";
             gameObject.layer = 9;
-            GetComponentInChildren<SpriteRenderer>().color = Color.red;
         }
     }
 
     void Update()
     {
-        if (IsNetworkPlayer)
+        if (!photonView.isMine)
         {
-            transform.position = Vector2.Lerp(transform.position, realPosition, 0.1f);
-            transform.eulerAngles = new Vector3(0,0, Mathf.LerpAngle(transform.rotation.eulerAngles.z, realRotation.eulerAngles.z, 0.1f));
+            transform.position = Vector2.Lerp(transform.position, realPosition, 0.05f);
+            transform.eulerAngles = new Vector3(0,0, Mathf.LerpAngle(transform.rotation.eulerAngles.z, realRotation.eulerAngles.z, 0.05f));
+            transform.localScale = Vector3.Lerp(transform.localScale, escalaReal, 0.1f);
+            miSprite.color = colorReal;
         }
     }
 
@@ -48,29 +60,56 @@ public class NetworkPlayer : Photon.MonoBehaviour {
         {
             stream.SendNext((Vector2)transform.position);
             stream.SendNext(transform.rotation);
-            if (MyPS != null)
-            {
-                stream.SendNext(MyPS.isPlaying);
-            }
+            stream.SendNext(transform.localScale);
+            stream.SendNext(vida);
+            stream.SendNext(miSprite.color.r);
+            stream.SendNext(miSprite.color.g);
+            stream.SendNext(miSprite.color.b);
         }
         else
         {
             realPosition = (Vector2)stream.ReceiveNext();
             realRotation = (Quaternion)stream.ReceiveNext();
-            try
+            escalaReal = (Vector3)stream.ReceiveNext();
+            vida = (int)stream.ReceiveNext();
+            colorReal = new Color((float)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext());
+        }
+    }
+    
+    [PunRPC]
+    public void TakeDamage(int IdJugador)
+    {
+        vida -= 30;
+        if (vida < 1)
+        {
+            if (photonView.isMine)
             {
-                NetworkShooting = (bool)stream.ReceiveNext();
-            }
-            catch (UnityException e)
-            {
-                Debug.Log(e);
+                BuscaJugador(IdJugador);
+                Debug.Log("Player " + IdJugador + " killed player " + PhotonNetwork.player.ID);
+                PhotonNetwork.Instantiate("ExplosionGrande", transform.position, transform.rotation, 0);
+                pf.gameStarted = false;
+                pf.gameFinished = true;
+                PhotonNetwork.Destroy(gameObject);
             }
         }
     }
 
-    public void OnColiisionEnter2D(Collision2D col)
+    [PunRPC]
+    public void JugadorCrece()
     {
-        Debug.Log("Coll");
-        rb2d.AddForceAtPosition(Vector2.one * 100, col.transform.position - transform.position);
+        transform.localScale += (Vector3.one * 0.5f);
+    }
+
+    public void BuscaJugador(int ID)
+    {
+        GameObject[] jugadores = GameObject.FindGameObjectsWithTag("NetworkPlayer");
+
+        foreach (GameObject jugador in jugadores)
+        {
+            if(jugador.GetComponent<PhotonView>().owner.ID == ID)
+            {
+                jugador.GetPhotonView().RPC("JugadorCrece", PhotonTargets.All);
+            }
+        }
     }
 }
