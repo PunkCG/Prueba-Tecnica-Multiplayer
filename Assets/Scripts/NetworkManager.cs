@@ -99,7 +99,7 @@ public class NetworkManager : Photon.PunBehaviour {
 	public Transform GenerateRandomSpawnPoint()
 	{
 		Transform spawnPoint;
-		spawnPoint = spawnPoints[PhotonNetwork.player.ID].transform;
+		spawnPoint = spawnPoints[Random.Range(0,10)].transform;
 		return spawnPoint; 
 	}
 

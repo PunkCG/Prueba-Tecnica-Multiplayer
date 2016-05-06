@@ -19,7 +19,7 @@ public class NetworkPlayer : Photon.MonoBehaviour
 
     private PlayerFollow pf;
     NetworkManager nm;
-    private Color miColor;
+    private SpriteRenderer miSprite;
 
     // Use this for initialization
     void Start ()
@@ -30,7 +30,7 @@ public class NetworkPlayer : Photon.MonoBehaviour
 
         pf = GameObject.FindObjectOfType<Camera>().GetComponent<PlayerFollow>();
         GetComponent<SpriteRenderer>().color = nm.playerColors[Random.Range(0, nm.playerColors.Length)];
-        miColor = GetComponent<SpriteRenderer>().color;
+        miSprite = GetComponent<SpriteRenderer>();
 
         if (photonView.isMine)
         {
@@ -50,7 +50,7 @@ public class NetworkPlayer : Photon.MonoBehaviour
             transform.position = Vector2.Lerp(transform.position, realPosition, 0.05f);
             transform.eulerAngles = new Vector3(0,0, Mathf.LerpAngle(transform.rotation.eulerAngles.z, realRotation.eulerAngles.z, 0.05f));
             transform.localScale = Vector3.Lerp(transform.localScale, escalaReal, 0.1f);
-            miColor = colorReal;
+            miSprite.color = colorReal;
         }
     }
 
@@ -62,10 +62,9 @@ public class NetworkPlayer : Photon.MonoBehaviour
             stream.SendNext(transform.rotation);
             stream.SendNext(transform.localScale);
             stream.SendNext(vida);
-            stream.SendNext(miColor.a);
-            stream.SendNext(miColor.r);
-            stream.SendNext(miColor.g);
-            stream.SendNext(miColor.b);
+            stream.SendNext(miSprite.color.r);
+            stream.SendNext(miSprite.color.g);
+            stream.SendNext(miSprite.color.b);
         }
         else
         {
@@ -73,10 +72,7 @@ public class NetworkPlayer : Photon.MonoBehaviour
             realRotation = (Quaternion)stream.ReceiveNext();
             escalaReal = (Vector3)stream.ReceiveNext();
             vida = (int)stream.ReceiveNext();
-            colorReal.a = (float)stream.ReceiveNext();
-            colorReal.r = (float)stream.ReceiveNext();
-            colorReal.g = (float)stream.ReceiveNext();
-            colorReal.b = (float)stream.ReceiveNext();
+            colorReal = new Color((float)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext());
         }
     }
     
