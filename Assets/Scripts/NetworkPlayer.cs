@@ -7,7 +7,7 @@ public class NetworkPlayer : Photon.MonoBehaviour
 {
     public Text labelVida;
     [SerializeField]
-    int vida = 100;
+    public int vida = 100;
 
     Vector2 realPosition;
     Quaternion realRotation;
@@ -62,9 +62,12 @@ public class NetworkPlayer : Photon.MonoBehaviour
             stream.SendNext(transform.rotation);
             stream.SendNext(transform.localScale);
             stream.SendNext(vida);
-            stream.SendNext(miSprite.color.r);
-            stream.SendNext(miSprite.color.g);
-            stream.SendNext(miSprite.color.b);
+            if (miSprite != null)
+            {
+                stream.SendNext(miSprite.color.r);
+                stream.SendNext(miSprite.color.g);
+                stream.SendNext(miSprite.color.b);
+            }
         }
         else
         {
@@ -72,14 +75,17 @@ public class NetworkPlayer : Photon.MonoBehaviour
             realRotation = (Quaternion)stream.ReceiveNext();
             escalaReal = (Vector3)stream.ReceiveNext();
             vida = (int)stream.ReceiveNext();
-            colorReal = new Color((float)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext());
+            if (miSprite != null)
+            {
+                colorReal = new Color((float)stream.ReceiveNext(), (float)stream.ReceiveNext(), (float)stream.ReceiveNext());
+            }
         }
     }
     
     [PunRPC]
     public void TakeDamage(int IdJugador)
     {
-        vida -= 30;
+        vida -= Random.Range(30,40);
         if (vida < 1)
         {
             if (photonView.isMine)

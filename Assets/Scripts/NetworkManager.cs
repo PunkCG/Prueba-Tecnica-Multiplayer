@@ -18,7 +18,10 @@ public class NetworkManager : Photon.PunBehaviour {
 
     public Button unirseSalaBtn;
     public Button crearSalaBtn;
+    public Slider sliderVida;
     public Text statusBar;
+
+    private GameObject player;
 
     public Color[] playerColors;
 
@@ -90,9 +93,24 @@ public class NetworkManager : Photon.PunBehaviour {
         unirseSalaBtn.interactable = (roomName != "" && !PhotonNetwork.connecting);
         crearSalaBtn.interactable = !PhotonNetwork.connecting;
 
+        if(pf.gameStarted)
+        {
+            sliderVida.gameObject.SetActive(true);
+        }
+
         if(pf.gameFinished)
         {
             UICanvasPerder.SetActive(true);
+            sliderVida.gameObject.SetActive(false);
+        }
+
+        if (player != null)
+        {
+            sliderVida.value = player.GetComponent<NetworkPlayer>().vida;
+        }
+        else
+        {
+            player = GameObject.FindGameObjectWithTag("Player");
         }
     }
 	
